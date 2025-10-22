@@ -41,13 +41,19 @@
           <th>Quantity</th>
           <th>Price</th>
         </tr>
-        <% order.items.each do |item| %>
+        <% if order.items && order.items.any? %>
+          <% order.items.each do |item| %>
+            <tr>
+              <td><%= item.item.product_id %></td>
+              <td><%= item.item.quantity %></td>
+              <td><%= item.cost.units %>.<%= item.cost.nanos %> <%= item.cost.currency_code %></td>
+            </tr>
+          <% end %>
+        <% else %>
           <tr>
-            <td><%= item.item.product_id %></td>
-            <td><%= item.item.quantity %></td>
-            <td><%= item.cost.units %>.<%= item.cost.nanos %> <%= item.cost.currency_code %></td>
+            <td colspan="3">No items in this order</td>
           </tr>
-        <% end %>
+        <% end %>            
     </table>
   </body>
 </html>
