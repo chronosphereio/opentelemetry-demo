@@ -52,7 +52,7 @@ function createMemoryLeak() {
   // Store in global array (never cleared)
   memoryLeakStore.push(largeObject);
 
-  // Create additional memory leaks with timers and event listeners (~150KB per second)
+  // Create additional memory leaks with timers and event listeners (~150KB per 2 second)
   const leakInterval = setInterval(() => {
     const leakData = {
       intervalId: leakInterval,
@@ -61,7 +61,7 @@ function createMemoryLeak() {
       largeString: 'x'.repeat(5000)
     };
     memoryLeakStore.push(leakData);
-  }, 1000);
+  }, 2000);
 
   // Create closure that holds references (~8MB initial)
   const createClosureLeak = () => {
