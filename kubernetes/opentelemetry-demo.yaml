@@ -19204,6 +19204,8 @@ spec:
               value: frontend-web
             - name: PUBLIC_OTEL_EXPORTER_OTLP_TRACES_ENDPOINT
               value: http://localhost:8080/otlp-http/v1/traces
+            - name: PUBLIC_OTEL_EXPORTER_OTLP_METRICS_ENDPOINT
+              value: http://localhost:8080/v1/metrics
             - name: OTEL_RESOURCE_ATTRIBUTES
               value: service.name=$(OTEL_SERVICE_NAME),service.namespace=opentelemetry-demo,service.version=2.1.3
           resources:

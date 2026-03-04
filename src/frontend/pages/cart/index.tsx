@@ -10,11 +10,23 @@ import CartDetail from '../../components/Cart/CartDetail';
 import EmptyCart from '../../components/Cart/EmptyCart';
 import { useCart } from '../../providers/Cart.provider';
 import AdProvider from '../../providers/Ad.provider';
+import { useEffect } from 'react';
+import { onCLS, onINP, onLCP, onTTFB, onFCP } from 'web-vitals';
+import { handleWebVitals } from '../../utils/telemetry/InstrumentWebVitals';
 
 const Cart: NextPage = () => {
   const {
     cart: { items },
   } = useCart();
+
+  // console.log('collect core web vitals in cart');
+  useEffect(() => {
+    onCLS(handleWebVitals);
+    onINP(handleWebVitals);
+    onLCP(handleWebVitals);
+    onTTFB(handleWebVitals);
+    onFCP(handleWebVitals);
+  }, []);
 
   return (
     <AdProvider

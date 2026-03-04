@@ -8,7 +8,7 @@ import { registerInstrumentations } from '@opentelemetry/instrumentation';
 import { getWebAutoInstrumentations } from '@opentelemetry/auto-instrumentations-web';
 import { resourceFromAttributes, detectResources } from '@opentelemetry/resources';
 import { browserDetector } from '@opentelemetry/opentelemetry-browser-detector';
-import { ATTR_SERVICE_NAME } from '@opentelemetry/semantic-conventions';
+import { ATTR_SERVICE_NAME, ATTR_SERVICE_INSTANCE_ID } from '@opentelemetry/semantic-conventions';
 import { OTLPTraceExporter } from '@opentelemetry/exporter-trace-otlp-http';
 import { SessionIdProcessor } from './SessionIdProcessor';
 
@@ -18,14 +18,31 @@ const {
   IS_SYNTHETIC_REQUEST = '',
 } = typeof window !== 'undefined' ? window.ENV : {};
 
+// use public service to get ip address
+let cachedIP: string = '';
+async function getIP(): Promise<string> {
+  if (cachedIP != '') {
+    return cachedIP;
+  }
+  const response = await fetch('https://api.ipify.org?format=json');
+  const data = await response.json();
+  cachedIP = data.ip;
+  return cachedIP;
+}
+
+let resource = resourceFromAttributes({
+  [ATTR_SERVICE_NAME]: NEXT_PUBLIC_OTEL_SERVICE_NAME,
+  [ATTR_SERVICE_INSTANCE_ID]:
+    typeof window !== 'undefined' ? await getIP() : "unknown ip",
+});
+
+const detectedResources = detectResources({ detectors: [browserDetector] });
+resource = resource.merge(detectedResources);
+// use resource in other files
+export const frontendResource = resource;
+
 const FrontendTracer = async () => {
   const { ZoneContextManager } = await import('@opentelemetry/context-zone');
-
-  let resource = resourceFromAttributes({
-    [ATTR_SERVICE_NAME]: NEXT_PUBLIC_OTEL_SERVICE_NAME,
-  });
-  const detectedResources = detectResources({detectors: [browserDetector]});
-  resource = resource.merge(detectedResources);
 
   const provider = new WebTracerProvider({
     resource,
@@ -63,6 +80,9 @@ const FrontendTracer = async () => {
           applyCustomAttributesOnSpan(span) {
             span.setAttribute('app.synthetic_request', IS_SYNTHETIC_REQUEST);
           },
+        },
+        '@opentelemetry/instrumentation-user-interaction': {
+          eventNames: ["load", "loadeddata", "loadedmetadata", "loadstart"]
         },
       }),
     ],

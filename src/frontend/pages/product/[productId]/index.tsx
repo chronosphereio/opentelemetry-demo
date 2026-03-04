@@ -20,6 +20,8 @@ import AdProvider from '../../../providers/Ad.provider';
 import { useCart } from '../../../providers/Cart.provider';
 import * as S from '../../../styles/ProductDetail.styled';
 import { useCurrency } from '../../../providers/Currency.provider';
+import { onCLS, onINP, onLCP, onTTFB, onFCP } from 'web-vitals';
+import { handleWebVitals } from '../../../utils/telemetry/InstrumentWebVitals';
 import ProductReviewProvider from '../../../providers/ProductReview.provider';
 import ProductAIAssistantProvider from '../../../providers/ProductAIAssistant.provider';
 
@@ -38,6 +40,15 @@ const ProductDetail: NextPage = () => {
   useEffect(() => {
     setQuantity(1);
   }, [productId]);
+
+  // console.log('collect core web vitals in product');
+  useEffect(() => {
+    onCLS(handleWebVitals);
+    onINP(handleWebVitals);
+    onLCP(handleWebVitals);
+    onTTFB(handleWebVitals);
+    onFCP(handleWebVitals);
+  }, []);
 
   const {
     data: {
