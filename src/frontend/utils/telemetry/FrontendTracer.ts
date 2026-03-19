@@ -77,8 +77,32 @@ const FrontendTracer = async () => {
         '@opentelemetry/instrumentation-fetch': {
           propagateTraceHeaderCorsUrls: /.*/,
           clearTimingResources: true,
-          applyCustomAttributesOnSpan(span) {
+          applyCustomAttributesOnSpan(span, request, result) {
             span.setAttribute('app.synthetic_request', IS_SYNTHETIC_REQUEST);
+
+            // Capture request headers
+            if (request instanceof Request) {
+              const cacheControl = request.headers.get('cache-control');
+              if (cacheControl) {
+                span.setAttribute('http.request.header.cache_control', cacheControl);
+              }
+              const faultDelay = request.headers.get('x-envoy-fault-delay-request');
+              if (faultDelay) {
+                span.setAttribute('http.request.header.x_envoy_fault_delay_request', faultDelay);
+              }
+            }
+
+            // Capture response headers
+            if (result instanceof Response) {
+              const serviceTime = result.headers.get('x-envoy-upstream-service-time');
+              if (serviceTime) {
+                span.setAttribute('http.response.header.x_envoy_upstream_service_time', serviceTime);
+              }
+              const accessControl = result.headers.get('access-control-allow-origin');
+              if (accessControl) {
+                span.setAttribute('http.response.header.access_control_allow_origin', accessControl);
+              }
+            }
           },
         },
         '@opentelemetry/instrumentation-user-interaction': {
