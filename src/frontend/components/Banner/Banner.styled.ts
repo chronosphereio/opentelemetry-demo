@@ -15,9 +15,7 @@ export const Banner = styled.div`
   }
 `;
 
-export const BannerImg = styled.img.attrs({
-  src: '/images/Banner.png',
-})`
+export const BannerImg = styled.img<{ src?: string }>`
   width: 100%;
   height: auto;
 `;
