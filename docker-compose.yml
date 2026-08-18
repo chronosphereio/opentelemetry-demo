@@ -2,7 +2,8 @@
 # SPDX-License-Identifier: Apache-2.0
 
 x-default-logging: &logging
-  driver: "json-file"
+  # driver: "json-file"
+  driver: "journald"
   options:
     max-size: "5m"
     max-file: "2"
