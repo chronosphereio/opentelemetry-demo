@@ -14,7 +14,7 @@ jobs:
     permissions:  # required by the reusable workflow
       contents: read  # required by the component-build-images reusable workflow
       packages: write  # required to push built images to GHCR
-    uses: ./.github/workflows/component-build-images-xcore.yml
+    uses: ./.github/workflows/component-build-images-xcor.yml
     if: github.repository == 'chronosphereio/opentelemetry-demo'
     with:
       push: true
