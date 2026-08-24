@@ -18,21 +18,21 @@ on:
         default: 'dev'
         required: false
         type: string
-      dockerhub_repo:
-        description: Docker Hub repository
-        default: 'otel/demo'
-        required: false
-        type: string
+      # dockerhub_repo:
+      #   description: Docker Hub repository
+      #   default: 'otel/demo'
+      #   required: false
+      #   type: string
       ghcr_repo:
         description: GHCR repository
         default: 'ghcr.io/chronosphereio/open-telemetry/demo'
         required: false
         type: string
-    secrets:
-      DOCKER_USERNAME:
-        required: false
-      DOCKER_PASSWORD:
-        required: false
+    # secrets:
+    #   DOCKER_USERNAME:
+    #     required: false
+    #   DOCKER_PASSWORD:
+    #     required: false
 
 permissions:
   contents: read

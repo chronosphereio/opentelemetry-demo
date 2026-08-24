@@ -1,0 +1,24 @@
+name: "Build and Publish"
+
+on:
+  release:
+    types: [published]
+
+permissions:
+  contents: read
+
+jobs:
+  build_and_push_images:
+    permissions:  # required by the reusable workflow
+      contents: read  # required by the component-build-images reusable workflow
+      packages: write  # required to push built images to GHCR
+    uses: ./.github/workflows/component-build-images-xcore.yml
+    if: github.repository == 'chronosphereio/opentelemetry-demo'
+    with:
+      push: true
+      force_build: true
+      version: ${{ github.event.release.tag_name }}
+    secrets:
+      inherit
+      # DOCKER_USERNAME: ${{ secrets.DOCKER_USERNAME }}
+      # DOCKER_PASSWORD: ${{ secrets.DOCKER_PASSWORD }}
