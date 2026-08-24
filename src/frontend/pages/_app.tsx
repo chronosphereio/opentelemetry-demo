@@ -13,6 +13,13 @@ import SessionGateway from '../gateways/Session.gateway';
 import { OpenFeatureProvider, OpenFeature } from '@openfeature/react-sdk';
 import { FlagdWebProvider } from '@openfeature/flagd-web-provider';
 
+// Initialize the Embrace SDK
+import { initSDK } from '@embrace-io/web-sdk';
+
+initSDK({
+  appID: 'cvrgz',
+});
+
 declare global {
   interface Window {
     ENV: {
