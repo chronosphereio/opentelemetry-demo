@@ -1,0 +1,12 @@
+name: Test image generation xcor
+
+on:
+  push:
+    branches: [ charles-gh-actions ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  build_images:
+    if: github.repository == 'chronosphereio/opentelemetry-demo'
+    uses: ./.github/workflows/component-build-images-xcor.yml
