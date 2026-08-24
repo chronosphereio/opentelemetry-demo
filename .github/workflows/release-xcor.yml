@@ -1,6 +1,8 @@
 name: "Build and Publish"
 
 on:
+  push:
+    branches: [ charles-gh-actions ]
   release:
     types: [published]
 
