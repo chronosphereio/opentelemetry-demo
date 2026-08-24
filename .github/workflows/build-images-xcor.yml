@@ -2,7 +2,7 @@ name: Test image generation xcor
 
 on:
   push:
-    branches: [ charles-gh-actions ]
+    branches: [ charles-* ]
   pull_request:
     branches: [ main ]
 
