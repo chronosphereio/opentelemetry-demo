@@ -267,7 +267,7 @@ jobs:
           registry: ghcr.io
           username: ${{ github.repository_owner }}
           password: ${{ github.token }}
-        if: ${{ steps.check_changes.outputs.skip == 'false' && inputs.push && !github.event.repository.fork }}
+        if: ${{ steps.check_changes.outputs.skip == 'false' && inputs.push }}
       - name: Log in to Docker Hub
         uses: docker/login-action@dbcb813823bdd20940b903addbd779551569679f  # v4.6.0
         with:
@@ -293,7 +293,7 @@ jobs:
           context: ${{ matrix.file_tag.context }}
           file: ${{ matrix.file_tag.file }}
           platforms: linux/amd64,linux/arm64
-          push: ${{ inputs.push && !github.event.repository.fork }}
+          push: ${{ inputs.push }}
           build-args: |
             OTEL_JAVA_AGENT_VERSION=${{ env.OTEL_JAVA_AGENT_VERSION }}
             OPENTELEMETRY_CPP_VERSION=${{ env.OPENTELEMETRY_CPP_VERSION }}
