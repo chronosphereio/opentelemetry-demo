@@ -469,8 +469,6 @@ services:
     environment:
       - IPV6_ENABLED
       - PAYMENT_PORT
-      - FLAGD_HOST
-      - FLAGD_PORT
       - PROFILE_ADDR
       - NODE_OPTIONS=--require @opentelemetry/auto-instrumentations-node/register
       - OTEL_EXPORTER_OTLP_ENDPOINT
@@ -495,8 +493,6 @@ services:
       retries: 20
     depends_on:
       otel-collector:
-        condition: service_started
-      flagd:
         condition: service_started
     logging: *logging
 
