@@ -9,6 +9,8 @@ const { OpenFeature } = require('@openfeature/server-sdk');
 const { FlagdProvider } = require('@openfeature/flagd-provider');
 const flagProvider = new FlagdProvider();
 
+const http = require('http');
+
 const logger = require('./logger');
 const tracer = trace.getTracer('payment');
 const meter = metrics.getMeter('payment');
@@ -16,12 +18,23 @@ const transactionsCounter = meter.createCounter('demo.payment.transactions', {
   unit: '{transaction}',
 });
 
-const LOYALTY_LEVEL = ['platinum', 'gold', 'silver', 'bronze'];
-
-/** Return random element from given array */
-function random(arr) {
-  const index = Math.floor(Math.random() * arr.length);
-  return arr[index];
+function fetchLoyaltyLevel() {
+  const addr = process.env.PROFILE_ADDR;
+  const url = `${addr}/loyalty`;
+  return new Promise((resolve, reject) => {
+    http.get(url, res => {
+      let data = '';
+      res.on('data', chunk => { data += chunk; });
+      res.on('end', () => {
+        try {
+          const { loyalty_level } = JSON.parse(data);
+          resolve(loyalty_level);
+        } catch (err) {
+          reject(err);
+        }
+      });
+    }).on('error', reject);
+  });
 }
 
 module.exports.charge = async request => {
@@ -62,7 +75,7 @@ module.exports.charge = async request => {
     const card = cardValidator(number);
     const { card_type: cardType, valid } = card.getCardDetails();
 
-    const loyalty_level = random(LOYALTY_LEVEL);
+    const loyalty_level = await fetchLoyaltyLevel();
 
     span.setAttributes({
       'demo.payment.card_type': cardType,
