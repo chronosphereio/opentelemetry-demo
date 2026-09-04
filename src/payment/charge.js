@@ -22,8 +22,16 @@ function fetchLoyaltyLevel() {
       let data = '';
       res.on('data', chunk => { data += chunk; });
       res.on('end', () => {
+        if (res.statusCode < 200 || res.statusCode >= 300) {
+          reject(new Error(`Profile service returned HTTP ${res.statusCode}: ${data}`));
+          return;
+        }
         try {
           const { loyalty_level } = JSON.parse(data);
+          if (!loyalty_level) {
+            reject(new Error(`Profile service returned invalid loyalty_level: ${data}`));
+            return;
+          }
           resolve(loyalty_level);
         } catch (err) {
           reject(err);
@@ -59,11 +67,11 @@ module.exports.charge = async request => {
     const { card_type: cardType, valid } = card.getCardDetails();
 
     const loyalty_level = await fetchLoyaltyLevel();
+    span.setAttribute('demo.user_context.loyalty_level', loyalty_level);
 
     span.setAttributes({
       'demo.payment.card_type': cardType,
       'demo.payment.card_valid': valid,
-      'demo.user_context.loyalty_level': loyalty_level,
       'demo.payment.card_number': number,
       'demo.payment.card_cvv': cvv
     });
