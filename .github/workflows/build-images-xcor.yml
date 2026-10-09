@@ -10,9 +10,6 @@ on:
 permissions:
   contents: read
 
-permissions:
-  contents: read
-
 jobs:
   build_images:
     permissions:
@@ -24,4 +21,3 @@ jobs:
     with:
       version: ${{ inputs.version || 'dev' }}
       push: true
-      
