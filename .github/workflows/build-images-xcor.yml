@@ -20,3 +20,4 @@ jobs:
     with:
       version: ${{ inputs.version || 'dev' }}
       push: true
+      
