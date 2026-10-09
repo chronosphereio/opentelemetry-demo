@@ -7,8 +7,14 @@ on:
         description: 'Image tag version'
         default: 'dev'
 
+permissions:
+  contents: read
+
 jobs:
   build_images:
+    permissions:
+      contents: read  # required to read Dockerfiles and source files
+      packages: write  # required to push built images to GHCR
     if: github.repository == 'chronosphereio/opentelemetry-demo'
     uses: ./.github/workflows/component-build-images-xcor.yml
     with:
