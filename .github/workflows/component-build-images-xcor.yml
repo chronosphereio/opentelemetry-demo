@@ -28,11 +28,11 @@ on:
         default: 'ghcr.io/chronosphereio/open-telemetry/demo'
         required: false
         type: string
-    # secrets:
-    #   DOCKER_USERNAME:
-    #     required: false
-    #   DOCKER_PASSWORD:
-    #     required: false
+        # secrets:
+        #   DOCKER_USERNAME:
+        #     required: false
+        #   DOCKER_PASSWORD:
+        #     required: false
 
 permissions:
   contents: read
@@ -52,7 +52,7 @@ jobs:
         run: make check-clean-work-tree
 
   build_and_push_images:
-    if: github.repository == 'chronosphereio/opentelemetry-demo'    
+    if: github.repository == 'chronosphereio/opentelemetry-demo'
     name: Build and push ${{ matrix.file_tag.tag_suffix }} image
     runs-on: ubuntu-latest
     needs: protobufcheck
