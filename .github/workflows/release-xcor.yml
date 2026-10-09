@@ -1,0 +1,33 @@
+# Build and publish all demo images to GHCR.
+#
+# Usage:
+#   gh workflow run "XCOR Build and Publish" --ref <branch> -f version=<tag>
+#
+# Examples:
+#   gh workflow run "XCOR Build and Publish" --ref main -f version=2.2.0
+#   gh workflow run "XCOR Build and Publish" --ref charles-use-additional-profile-for-payment-charge -f version=dev
+name: "XCOR Build and Publish"
+
+on:
+  workflow_dispatch:
+    inputs:
+      version:
+        description: 'Image tag version'
+        required: true
+
+permissions:
+  contents: read
+
+jobs:
+  build_and_push_images:
+    permissions:
+      contents: read
+      packages: write
+    uses: ./.github/workflows/component-build-images-xcor.yml
+    if: github.repository == 'chronosphereio/opentelemetry-demo'
+    with:
+      push: true
+      force_build: true
+      version: ${{ inputs.version }}
+    secrets:
+      inherit
