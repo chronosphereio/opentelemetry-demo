@@ -10,6 +10,8 @@ import SessionGateway from '../../gateways/Session.gateway';
 import { useCart } from '../../providers/Cart.provider';
 import { useCurrency } from '../../providers/Currency.provider';
 import * as S from '../../styles/Cart.styled';
+import { useJourney } from '../../utils/telemetry/Journey';
+import { addBreadcrumb } from '../../utils/telemetry/Telemetry';
 
 const { userId } = SessionGateway.getSession();
 
@@ -21,6 +23,15 @@ const CartDetail = () => {
   } = useCart();
   const { selectedCurrency } = useCurrency();
   const { push } = useRouter();
+  const checkoutJourney = useJourney('checkout', 'cart', {
+    'demo.cart.items.count': items.length,
+    'demo.user_context.selected_currency': selectedCurrency,
+  });
+
+  const onEmptyCart = useCallback(() => {
+    addBreadcrumb(`Tapped Empty Cart (${items.length} items)`);
+    emptyCart();
+  }, [emptyCart, items.length]);
 
   const onPlaceOrder = useCallback(
     async ({
@@ -35,31 +46,39 @@ const CartDetail = () => {
       creditCardExpirationYear,
       creditCardNumber,
     }: IFormData) => {
-      const order = await placeOrder({
-        userId,
-        email,
-        address: {
-          streetAddress,
-          state,
-          country,
-          city,
-          zipCode,
-        },
-        userCurrency: selectedCurrency,
-        creditCard: {
-          creditCardCvv,
-          creditCardExpirationMonth,
-          creditCardExpirationYear,
-          creditCardNumber,
-        },
-      });
+      addBreadcrumb(`Tapped Place Order (${items.length} items)`);
+      let order;
+      try {
+        order = await placeOrder({
+          userId,
+          email,
+          address: {
+            streetAddress,
+            state,
+            country,
+            city,
+            zipCode,
+          },
+          userCurrency: selectedCurrency,
+          creditCard: {
+            creditCardCvv,
+            creditCardExpirationMonth,
+            creditCardExpirationYear,
+            creditCardNumber,
+          },
+        });
+      } catch (error) {
+        checkoutJourney.fail(error);
+        return;
+      }
+      checkoutJourney.complete({ 'demo.order.id': order.orderId });
 
       push({
         pathname: `/cart/checkout/${order.orderId}`,
         query: { order: JSON.stringify(order) },
       });
     },
-    [placeOrder, push, selectedCurrency]
+    [checkoutJourney, items.length, placeOrder, push, selectedCurrency]
   );
 
   return (
@@ -67,7 +86,7 @@ const CartDetail = () => {
       <div>
         <S.Header>
           <S.CarTitle>Shopping Cart</S.CarTitle>
-          <S.EmptyCartButton onClick={emptyCart} $type="link">
+          <S.EmptyCartButton onClick={onEmptyCart} $type="link">
             Empty Cart
           </S.EmptyCartButton>
         </S.Header>

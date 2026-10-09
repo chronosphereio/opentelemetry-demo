@@ -5,6 +5,7 @@ import { useState } from 'react';
 import { CypressFields } from '../../utils/enums/CypressFields';
 import { useCart } from '../../providers/Cart.provider';
 import CartDropdown from '../CartDropdown';
+import { addBreadcrumb } from '../../utils/telemetry/Telemetry';
 import * as S from './CartIcon.styled';
 
 const CartIcon = () => {
@@ -13,9 +14,14 @@ const CartIcon = () => {
     cart: { items },
   } = useCart();
 
+  const onOpen = () => {
+    addBreadcrumb(`Opened cart dropdown (${items.length} items)`);
+    setIsOpen(true);
+  };
+
   return (
     <>
-      <S.CartIcon data-cy={CypressFields.CartIcon} onClick={() => setIsOpen(true)}>
+      <S.CartIcon data-cy={CypressFields.CartIcon} onClick={onOpen}>
         <S.Icon src="/icons/CartIcon.svg" alt="Cart icon" title="Cart" />
         {!!items.length && <S.ItemsCount data-cy={CypressFields.CartItemCount}>{items.length}</S.ItemsCount>}
       </S.CartIcon>

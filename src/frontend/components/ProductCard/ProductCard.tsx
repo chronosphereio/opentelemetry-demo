@@ -7,9 +7,12 @@ import ProductPrice from '../ProductPrice';
 import * as S from './ProductCard.styled';
 import { useState, useEffect } from 'react';
 import { useNumberFlagValue } from '@openfeature/react-sdk';
+import { ATTR_ERROR_TYPE } from '@opentelemetry/semantic-conventions';
+import { addBreadcrumb, logWarning } from '../../utils/telemetry/Telemetry';
 
 interface IProps {
   product: Product;
+  source?: 'product_list' | 'recommendations';
 }
 
 async function getImageWithHeaders(requestInfo: Request) {
@@ -28,6 +31,7 @@ const ProductCard = ({
       nanos: 0,
     },
   },
+  source = 'product_list',
 }: IProps) => {
   const imageSlowLoad = useNumberFlagValue('imageSlowLoad', 0);
   const [imageSrc, setImageSrc] = useState<string>('');
@@ -58,6 +62,7 @@ const ProductCard = ({
       })
       .catch(err => {
         if (!cancelled && err.name !== 'AbortError') {
+          logWarning('Product image failed to load', { 'demo.product.id': id, [ATTR_ERROR_TYPE]: err.name });
           setImageSrc('');
         }
       });
@@ -66,10 +71,13 @@ const ProductCard = ({
       controller.abort();
       if (objectUrl) URL.revokeObjectURL(objectUrl);
     };
-  }, [imageSlowLoad, picture]);
+  }, [id, imageSlowLoad, picture]);
 
   return (
-    <S.Link href={`/product/${id}`}>
+    <S.Link
+      href={`/product/${id}`}
+      onClick={() => addBreadcrumb(`Tapped ${source === 'recommendations' ? 'recommended ' : ''}product ${name} (${id})`)}
+    >
       <S.ProductCard data-cy={CypressFields.ProductCard}>
         <S.Image $src={imageSrc} />
         <div>

@@ -6,7 +6,10 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import ApiGateway from '../gateways/Api.gateway';
 import { CartItem, OrderResult, PlaceOrderRequest } from '../protos/demo';
 import { IProductCart } from '../types/Cart';
+import { addBreadcrumb, setSpanAttributes, traceFlow } from '../utils/telemetry/Telemetry';
 import { useCurrency } from './Currency.provider';
+
+const ignoreLoggedFailure = () => undefined;
 
 interface IContext {
   cart: IProductCart;
@@ -46,18 +49,49 @@ const CartProvider = ({ children }: IProps) => {
     queryKey: ['cart', selectedCurrency],
     queryFn: () => ApiGateway.getCart(selectedCurrency),
   });
+  const traceCartItemChange = (flowName: string, item: CartItem & { currencyCode: string }) =>
+    traceFlow(
+      flowName,
+      {
+        'demo.product.id': item.productId,
+        'demo.product.quantity': item.quantity,
+        'demo.user_context.selected_currency': item.currencyCode,
+      },
+      () => ApiGateway.addCartItem(item)
+    );
+
   const addCartMutation = useMutation({
-    mutationFn: ApiGateway.addCartItem,
+    mutationFn: (item: CartItem & { currencyCode: string }) => traceCartItemChange('add_to_cart', item),
+    ...mutationOptions,
+  });
+
+  const updateCartItemMutation = useMutation({
+    mutationFn: (item: CartItem & { currencyCode: string }) => traceCartItemChange('update_cart_item', item),
     ...mutationOptions,
   });
 
   const emptyCartMutation = useMutation({
-    mutationFn: ApiGateway.emptyCart,
+    mutationFn: () => traceFlow('empty_cart', { 'demo.cart.items.count': cart.items.length }, () => ApiGateway.emptyCart()),
     ...mutationOptions,
   });
 
   const placeOrderMutation = useMutation({
-    mutationFn: ApiGateway.placeOrder,
+    mutationFn: (order: PlaceOrderRequest & { currencyCode: string }) =>
+      traceFlow(
+        'place_order',
+        {
+          'demo.cart.items.count': cart.items.length,
+          'demo.user_context.selected_currency': order.currencyCode,
+        },
+        async span => {
+          const result = await ApiGateway.placeOrder(order);
+          setSpanAttributes(span, {
+            'demo.order.id': result.orderId,
+            'demo.order.items.count': result.items.length,
+          });
+          return result;
+        }
+      ),
     ...mutationOptions,
   });
 
@@ -71,12 +105,15 @@ const CartProvider = ({ children }: IProps) => {
       const existing = cart.items.find(i => i.productId === productId);
       const delta = newQuantity - (existing?.quantity ?? 0);
       if (delta !== 0) {
-        addCartMutation.mutateAsync({ productId, quantity: delta, currencyCode: selectedCurrency });
+        addBreadcrumb(`Changed cart quantity of ${productId} from ${existing?.quantity ?? 0} to ${newQuantity}`);
+        updateCartItemMutation
+          .mutateAsync({ productId, quantity: delta, currencyCode: selectedCurrency })
+          .catch(ignoreLoggedFailure);
       }
     },
-    [addCartMutation, cart.items, selectedCurrency]
+    [updateCartItemMutation, cart.items, selectedCurrency]
   );
-  const emptyCart = useCallback(() => emptyCartMutation.mutateAsync(), [emptyCartMutation]);
+  const emptyCart = useCallback(() => emptyCartMutation.mutateAsync().catch(ignoreLoggedFailure), [emptyCartMutation]);
   const placeOrder = useCallback(
     (order: PlaceOrderRequest) => placeOrderMutation.mutateAsync({ ...order, currencyCode: selectedCurrency }),
     [placeOrderMutation, selectedCurrency]

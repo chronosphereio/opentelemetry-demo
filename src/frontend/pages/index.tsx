@@ -11,12 +11,18 @@ import ApiGateway from '../gateways/Api.gateway';
 import Banner from '../components/Banner';
 import { CypressFields } from '../utils/enums/CypressFields';
 import { useCurrency } from '../providers/Currency.provider';
+import { setSpanAttributes, traceFlow } from '../utils/telemetry/Telemetry';
 
 const Home: NextPage = () => {
   const { selectedCurrency } = useCurrency();
   const { data: productList = [] } = useQuery({
     queryKey: ['products', selectedCurrency],
-    queryFn: () => ApiGateway.listProducts(selectedCurrency),
+    queryFn: () =>
+      traceFlow('load_products', { 'demo.user_context.selected_currency': selectedCurrency }, async span => {
+        const products = await ApiGateway.listProducts(selectedCurrency);
+        setSpanAttributes(span, { 'demo.product.count': products.length });
+        return products;
+      }),
   });
 
   return (
