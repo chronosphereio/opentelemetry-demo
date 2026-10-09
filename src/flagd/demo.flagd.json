@@ -28,6 +28,25 @@
         "on": true
       }
     },
+    "aiRunawayAgent": {
+      "defaultVariant": "off",
+      "description": "forces the agent to keep looping tool calls until it hits its recursion limit",
+      "state": "ENABLED",
+      "variants": {
+        "off": 0,
+        "on": 20
+      }
+    },
+    "aiSlowResponse": {
+      "defaultVariant": "off",
+      "description": "slow LLM responses in the agent service",
+      "state": "ENABLED",
+      "variants": {
+        "10sec": 10000,
+        "5sec": 5000,
+        "off": 0
+      }
+    },
     "cartFailure": {
       "defaultVariant": "off",
       "description": "Fail cart service n% of the time",
@@ -53,6 +72,18 @@
         "10x": 10,
         "1x": 1,
         "off": 0
+      }
+    },
+    "emitRawPii": {
+      "defaultVariant": "off",
+      "description": "Emit raw PII attributes (user.email, demo.payment.card_number, demo.payment.card_cvv) from checkout and payment for the collector redaction example. Not a failure scenario -- controls PII emission, independent of collector-side redaction which always runs.",
+      "metadata": {
+        "schedulable": false
+      },
+      "state": "ENABLED",
+      "variants": {
+        "off": false,
+        "on": true
       }
     },
     "failedReadinessProbe": {
@@ -84,33 +115,33 @@
         "off": 0
       }
     },
+    "kafkaConsumerDead": {
+      "defaultVariant": "off",
+      "description": "fraud-detection leaves the orders consumer group (unsubscribes and stops polling) while checkout keeps producing, so the group empties (members -> 0) and lag climbs against a zero-member group",
+      "state": "ENABLED",
+      "variants": {
+        "off": false,
+        "on": true
+      }
+    },
     "kafkaQueueProblems": {
       "defaultVariant": "off",
-      "description": "Overloads Kafka queue while simultaneously introducing a consumer side delay leading to a lag spike",
+      "description": "Throttles the fraud-detection consumer by sleeping N ms per consumed record (value = per-record delay in ms). Drains slower than checkout produces, so consumer lag climbs. Tune the delay live from this flag.",
+      "state": "ENABLED",
+      "variants": {
+        "1sec": 1000,
+        "3sec": 3000,
+        "5sec": 5000,
+        "off": 0
+      }
+    },
+    "loadGeneratorFloodHomepage": {
+      "defaultVariant": "off",
+      "description": "Flood the frontend with a large amount of requests.",
       "state": "ENABLED",
       "variants": {
         "off": 0,
         "on": 100
-      }
-    },
-    "loadGeneratorTraffic": {
-      "defaultVariant": "on",
-      "description": "Enable synthetic traffic from the load generator. Turn off to pause all load-generator scenarios.",
-      "state": "ENABLED",
-      "variants": {
-        "off": 0,
-        "on": 1
-      }
-    },
-    "loadGeneratorVUs": {
-      "defaultVariant": "5",
-      "description": "Number of concurrent virtual users the load generator's HTTP scenario runs. Changes take effect on the wrapper's next poll, restarting k6.",
-      "state": "ENABLED",
-      "variants": {
-        "10": 10,
-        "25": 25,
-        "5": 5,
-        "50": 50
       }
     },
     "paymentFailure": {
@@ -154,6 +185,15 @@
           "off"
         ]
       },
+      "variants": {
+        "off": false,
+        "on": true
+      }
+    },
+    "productCatalogLockContention": {
+      "defaultVariant": "off",
+      "description": "Trigger lock contention on the product catalog database",
+      "state": "ENABLED",
       "variants": {
         "off": false,
         "on": true
