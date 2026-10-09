@@ -75,8 +75,8 @@ const FrontendTracer = async () => {
     additionalQueryParamsToScrub: ['order'],
     defaultInstrumentationConfig: {
       network: {
-        // Matches the Embrace config and data endpoints, e.g. https://a-<appID>.data.emb-api.com/v2/logs
-        ignoreUrls: [collectorTracesUrl, /\.emb-api\.com\//],
+        // Matches URLs on the Embrace config and data hosts, e.g. https://a-<appID>.data.emb-api.com/v2/logs
+        ignoreUrls: [collectorTracesUrl, /^https:\/\/[\w.-]+\.emb-api\.com\//],
       },
       '@opentelemetry/instrumentation-fetch': fetchInstrumentationConfig,
       '@opentelemetry/instrumentation-xml-http-request': {
