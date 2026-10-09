@@ -19,6 +19,8 @@ import AdProvider from '../../../providers/Ad.provider';
 import { useCart } from '../../../providers/Cart.provider';
 import * as S from '../../../styles/ProductDetail.styled';
 import { useCurrency } from '../../../providers/Currency.provider';
+import { useJourney } from '../../../utils/telemetry/Journey';
+import { addBreadcrumb, traceFlow } from '../../../utils/telemetry/Telemetry';
 
 const quantityOptions = new Array(10).fill(0).map((_, i) => i + 1);
 
@@ -31,6 +33,7 @@ const ProductDetail: NextPage = () => {
   } = useCart();
   const { selectedCurrency } = useCurrency();
   const productId = query.productId as string;
+  const addToCartJourney = useJourney('add_to_cart', productId, { 'demo.product.id': productId });
 
   useEffect(() => {
     setQuantity(1);
@@ -46,18 +49,42 @@ const ProductDetail: NextPage = () => {
     } = {} as Product,
   } = useQuery({
       queryKey: ['product', productId, 'selectedCurrency', selectedCurrency],
-      queryFn: () => ApiGateway.getProduct(productId, selectedCurrency),
+      queryFn: () =>
+        traceFlow('load_product', { 'demo.product.id': productId, 'demo.user_context.selected_currency': selectedCurrency }, () =>
+          ApiGateway.getProduct(productId, selectedCurrency)
+        ),
       enabled: !!productId,
     }
   ) as { data: Product };
 
+  useEffect(() => {
+    if (name) {
+      addBreadcrumb(`Viewed product ${name} (${productId})`);
+    }
+  }, [name, productId]);
+
+  const onQuantityChange = useCallback(
+    (newQuantity: number) => {
+      addBreadcrumb(`Selected quantity ${newQuantity} for product ${productId}`);
+      setQuantity(newQuantity);
+    },
+    [productId]
+  );
+
   const onAddItem = useCallback(async () => {
-    await addItem({
-      productId,
-      quantity,
-    });
+    addBreadcrumb(`Tapped Add To Cart for product ${productId} (quantity ${quantity})`);
+    try {
+      await addItem({
+        productId,
+        quantity,
+      });
+    } catch (error) {
+      addToCartJourney.fail(error, { 'demo.product.quantity': quantity });
+      return;
+    }
+    addToCartJourney.complete({ 'demo.product.quantity': quantity });
     push('/cart');
-  }, [addItem, productId, quantity, push]);
+  }, [addItem, addToCartJourney, productId, quantity, push]);
 
   return (
     <AdProvider
@@ -85,7 +112,7 @@ const ProductDetail: NextPage = () => {
               <S.Text>Quantity</S.Text>
               <Select
                 data-cy={CypressFields.ProductQuantity}
-                onChange={event => setQuantity(+event.target.value)}
+                onChange={event => onQuantityChange(+event.target.value)}
                 value={quantity}
               >
                 {quantityOptions.map(option => (

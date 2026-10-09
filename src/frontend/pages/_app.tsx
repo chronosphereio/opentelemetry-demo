@@ -9,9 +9,12 @@ import CartProvider from '../providers/Cart.provider';
 import { ThemeProvider } from 'styled-components';
 import Theme from '../styles/Theme';
 import FrontendTracer from '../utils/telemetry/FrontendTracer';
+import usePageTracking from '../utils/telemetry/usePageTracking';
 import SessionGateway from '../gateways/Session.gateway';
 import { OpenFeatureProvider, OpenFeature } from '@openfeature/react-sdk';
 import { FlagdWebProvider } from '@openfeature/flagd-web-provider';
+import { EmbraceErrorBoundary } from '@embrace-io/web-sdk/react-instrumentation';
+import ErrorFallback from '../components/ErrorFallback';
 
 declare global {
   interface Window {
@@ -19,6 +22,8 @@ declare global {
       NEXT_PUBLIC_PLATFORM?: string;
       NEXT_PUBLIC_OTEL_SERVICE_NAME?: string;
       NEXT_PUBLIC_OTEL_EXPORTER_OTLP_TRACES_ENDPOINT?: string;
+      NEXT_PUBLIC_EMBRACE_APP_ID?: string;
+      NEXT_PUBLIC_APP_VERSION?: string;
       IS_SYNTHETIC_REQUEST?: string;
     };
   }
@@ -59,17 +64,21 @@ if (typeof window !== 'undefined') {
 const queryClient = new QueryClient();
 
 function MyApp({ Component, pageProps }: AppProps) {
+  usePageTracking();
+
   return (
     <ThemeProvider theme={Theme}>
-      <OpenFeatureProvider>
-        <QueryClientProvider client={queryClient}>
-          <CurrencyProvider>
-            <CartProvider>
-              <Component {...pageProps} />
-            </CartProvider>
-          </CurrencyProvider>
-        </QueryClientProvider>
-      </OpenFeatureProvider>
+      <EmbraceErrorBoundary fallback={() => <ErrorFallback />}>
+        <OpenFeatureProvider>
+          <QueryClientProvider client={queryClient}>
+            <CurrencyProvider>
+              <CartProvider>
+                <Component {...pageProps} />
+              </CartProvider>
+            </CurrencyProvider>
+          </QueryClientProvider>
+        </OpenFeatureProvider>
+      </EmbraceErrorBoundary>
     </ThemeProvider>
   );
 }

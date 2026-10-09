@@ -20,7 +20,7 @@ const Recommendations = () => {
       </S.TitleContainer>
       <S.ProductList>
         {recommendedProductList.map(product => (
-          <ProductCard key={product.id} product={product} />
+          <ProductCard key={product.id} product={product} source="recommendations" />
         ))}
       </S.ProductList>
     </S.Recommendations>

@@ -1,0 +1,35 @@
+# Copyright The OpenTelemetry Authors
+# SPDX-License-Identifier: Apache-2.0
+
+file_format: definition/2
+attributes:
+  - key: demo.journey.name
+    type: string
+    brief: Name of a user journey in the web UI
+    stability: stable
+    note: Set on the logs that mark the start and end of a user journey, such as adding a product to the cart or checking out
+    examples: ["add_to_cart", "checkout"]
+  - key: demo.journey.id
+    type: string
+    brief: Identifier of a single user journey run
+    stability: stable
+    note: Shared by the start and end logs of the same journey run so they can be paired
+    examples: ["3f2b8c1e-5d4a-4b7e-9c2d-1a6f0e8b7d35"]
+  - key: demo.journey.outcome
+    type: string
+    brief: How a user journey ended
+    stability: stable
+    note: One of "completed", "failed" or "abandoned", set on the log that marks the end of a journey
+    examples: ["completed", "failed", "abandoned"]
+  - key: demo.journey.duration_ms
+    type: int
+    brief: Time between the start and end of a user journey, in milliseconds
+    stability: stable
+    note: Set on the log that marks the end of a journey
+    examples: [1520, 48210]
+  - key: demo.flow.name
+    type: string
+    brief: Name of the traced UI flow in which an unexpected error occurred
+    stability: stable
+    note: Matches the name of the span created for the flow, such as add_to_cart or place_order
+    examples: ["add_to_cart", "place_order"]

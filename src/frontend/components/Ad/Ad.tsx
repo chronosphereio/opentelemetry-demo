@@ -3,6 +3,7 @@
 
 import { CypressFields } from '../../utils/enums/CypressFields';
 import { useAd } from '../../providers/Ad.provider';
+import { addBreadcrumb } from '../../utils/telemetry/Telemetry';
 import * as S from './Ad.styled';
 
 const Ad = () => {
@@ -11,7 +12,7 @@ const Ad = () => {
 
   return (
     <S.Ad data-cy={CypressFields.Ad}>
-      <S.Link href={redirectUrl}>
+      <S.Link href={redirectUrl} onClick={() => addBreadcrumb(`Tapped ad linking to ${redirectUrl}`)}>
         <p>{text}</p>
       </S.Link>
     </S.Ad>

@@ -5,6 +5,7 @@ import { createContext, useCallback, useContext, useMemo, useState, useEffect } 
 import { useQuery } from '@tanstack/react-query';
 import ApiGateway from '../gateways/Api.gateway';
 import SessionGateway from '../gateways/Session.gateway';
+import { addBreadcrumb, setSessionProperty } from '../utils/telemetry/Telemetry';
 
 const { currencyCode } = SessionGateway.getSession();
 
@@ -38,6 +39,10 @@ const CurrencyProvider = ({ children }: IProps) => {
   }, []);
 
   const onSelectCurrency = useCallback((currencyCode: string) => {
+    const previousCurrencyCode = SessionGateway.getSession().currencyCode;
+    addBreadcrumb(`Changed currency from ${previousCurrencyCode} to ${currencyCode}`);
+    setSessionProperty('demo.user_context.selected_currency', currencyCode);
+
     setSelectedCurrency(currencyCode);
     SessionGateway.setSessionValue('currencyCode', currencyCode);
   }, []);
